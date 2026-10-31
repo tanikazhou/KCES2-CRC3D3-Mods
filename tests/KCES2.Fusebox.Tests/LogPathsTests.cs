@@ -1,3 +1,4 @@
+using AwesomeAssertions;
 using Xunit;
 
 namespace KCES2.Fusebox.Tests;
@@ -18,20 +19,21 @@ public class LogPathsTests
     // Outside folder: file name only.
     [InlineData("/home/player/other/secret.ks", "secret.ks")]
     [InlineData("/tmp/a.txt", "a.txt")]
-    public void Rel(string path, string expected) => Assert.Equal(expected, LogPaths.Rel(path, Root));
+    public void Rel(string path, string expected) => LogPaths.Rel(path, Root).Should().Be(expected);
 
     [Fact]
-    public void Rel_WindowsRoot() => Assert.Equal("BepInEx\\plugins\\x.ks",
-        LogPaths.Rel("S:\\Users\\player\\KCES2\\BepInEx\\plugins\\x.ks", "S:\\Users\\player\\KCES2"));
+    public void Rel_WindowsRoot() =>
+        LogPaths.Rel(@"S:\Users\player\KCES2\BepInEx\plugins\x.ks", @"S:\Users\player\KCES2")
+            .Should().Be(@"BepInEx\plugins\x.ks");
 
     [Theory]
     [InlineData(null)]
     [InlineData("")]
     public void Rel_WithoutRoot_GivesTheFileName(string root) =>
-        Assert.Equal("x.ks", LogPaths.Rel("/home/player/x.ks", root));
+        LogPaths.Rel("/home/player/x.ks", root).Should().Be("x.ks");
 
     [Fact]
-    public void Rel_SiblingFolderWithTheSamePrefix() => Assert.Equal("x.ks", LogPaths.Rel(Root + "Saves/x.ks", Root));
+    public void Rel_SiblingFolderWithTheSamePrefix() => LogPaths.Rel(Root + "Saves/x.ks", Root).Should().Be("x.ks");
 
     [Theory]
     [InlineData("Could not find file '" + Root + "/x.ks'", "Could not find file './x.ks'")]
@@ -39,23 +41,23 @@ public class LogPathsTests
     [InlineData("no path here", "no path here")]
     [InlineData("", "")]
     [InlineData(null, null)]
-    public void Scrub(string text, string expected) => Assert.Equal(expected, LogPaths.Scrub(text, Root));
+    public void Scrub(string text, string expected) => LogPaths.Scrub(text, Root).Should().Be(expected);
 
     [Fact]
     public void Scrub_BothSeparators()
     {
-        const string win = "S:\\Users\\player\\KCES2";
-        Assert.Equal(".\\a.ks, ./b.ks",
-            LogPaths.Scrub("S:\\Users\\player\\KCES2\\a.ks, S:/Users/player/KCES2/b.ks", win));
+        const string win = @"S:\Users\player\KCES2";
+        LogPaths.Scrub(@"S:\Users\player\KCES2\a.ks, S:/Users/player/KCES2/b.ks", win).Should()
+            .Be(".\\a.ks, ./b.ks");
     }
 
     [Theory]
     [InlineData(null)]
     [InlineData("")]
     public void Scrub_WithoutRoot_TextStays(string root) =>
-        Assert.Equal("a " + Root, LogPaths.Scrub("a " + Root, root));
+        LogPaths.Scrub("a " + Root, root).Should().Be("a " + Root);
 
     [Fact]
     public void Scrub_OtherCase() =>
-        Assert.DoesNotContain("player", LogPaths.Scrub("S:\\USERS\\PLAYER\\KCES2\\a.ks", "S:\\Users\\player\\KCES2"));
+        LogPaths.Scrub(@"S:\USERS\PLAYER\KCES2\a.ks", @"S:\Users\player\KCES2").Should().NotContain("player");
 }

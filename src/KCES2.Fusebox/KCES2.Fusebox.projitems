@@ -7,11 +7,13 @@
     <Import_RootNamespace>KCES2.Fusebox</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)ConfigurationManagerAttributes.cs"/>
     <Compile Include="$(MSBuildThisFileDirectory)FeatureGuard.cs"/>
     <Compile Include="$(MSBuildThisFileDirectory)KeyInput.cs"/>
     <Compile Include="$(MSBuildThisFileDirectory)LogPaths.cs"/>
     <Compile Include="$(MSBuildThisFileDirectory)ManagerObjectCheck.cs"/>
     <Compile Include="$(MSBuildThisFileDirectory)SceneReadyDelay.cs"/>
+    <Compile Include="$(MSBuildThisFileDirectory)SettingList.cs"/>
   </ItemGroup>
   <ItemGroup>
     <Content Include="$(MSBuildThisFileDirectory)README.md"/>

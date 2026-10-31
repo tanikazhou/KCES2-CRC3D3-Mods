@@ -9,6 +9,7 @@ indent_style = space
 
 [*.cs]
 indent_size = 4
+resharper_convert_to_primary_constructor_highlighting = none
 
 [*.{csproj,projitems,props,targets,slnx,json,config,example,user}]
 indent_size = 2

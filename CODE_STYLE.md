@@ -103,6 +103,7 @@ Example:
    Shared source (`.projitems`) uses the namespace of its shared project (`KCES2.Fusebox`), whatever project imports it. Rider checks it against the importing project, so each shared file has `// ReSharper disable once CheckNamespace` above its namespace.
 6. `ConfigurationManagerAttributes` keeps its exact name, because ConfigurationManager finds the class by its name.
 7. File-scoped namespaces (IDE0161). Implicit usings on (`ImplicitUsings` = `enable`). On net48 the SDK adds `System`, `System.Collections.Generic`, `System.IO`, `System.Linq`, `System.Threading` and `System.Threading.Tasks`.
+8. Nullable reference types: off in plugins (`Nullable` = `disable`), because a destroyed Unity object is not C# null and annotations mislead there. Shared source (`src/KCES2.Fusebox/`) starts each file with `#nullable enable`, because other projects compile it, some with nullable on. The net48 reference assemblies have no null annotations (`string.IsNullOrEmpty` has no `[NotNullWhen(false)]`): after such a check, put `!` on the first use of the value.
 
 ## Member order
 
@@ -189,3 +190,4 @@ private static void Attach(KCES2EditSliderHandle handle)
 4. One rule file `build/CodeStyle.globalconfig`, loaded by `build/KCES2.Fusebox.props` for every repo that imports it. Each repo keeps a short `.editorconfig` for the editor (charset, line ends, indent) and a `.gitattributes`.
 5. Test projects compile linked plugin files (`<Compile Include=... Link=...>`). The plugins target net48, which has no `System.Index` or `System.Range`, so `build/Tests.props` turns IDE0056 and IDE0057 off for linked files only (generated `obj/.../LinkedFiles.globalconfig`). Test-only code keeps both rules.
 6. Line-end rules apply to code and build files only. Data files keep their bytes: the KAG scripts (`.ks`) are CRLF with BOM, as in the original game files, and XUnity translation files can have a BOM.
+7. Tests use AwesomeAssertions (`build/Tests.props`) for checks. Two xUnit calls stay: `Assert.NotNull` where the IDE needs null information after the check, and `Assert.Skip` to skip a test.

@@ -1,4 +1,5 @@
 using System.Reflection;
+using AwesomeAssertions;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using KCES2.Fusebox.Tests.Support;
@@ -27,30 +28,30 @@ public class FeatureGuardTests : IDisposable
     public void Start_Success_ReturnsTrueAndStaysOn()
     {
         bool ran = false;
-        Assert.True(_guard.Start("A", () => ran = true));
-        Assert.True(ran);
-        Assert.False(_guard.IsOff("A"));
-        Assert.Empty(_log.Lines);
+        _guard.Start("A", () => ran = true).Should().BeTrue();
+        ran.Should().BeTrue();
+        _guard.IsOff("A").Should().BeFalse();
+        _log.Lines.Should().BeEmpty();
     }
 
     [Fact]
     public void Start_Throws_ReturnsFalseTurnsOffAndLogsOnce()
     {
-        Assert.False(_guard.Start("A", static () => throw new InvalidOperationException("boom")));
-        Assert.True(_guard.IsOff("A"));
-        string e = Assert.Single(_log.Of(LogLevel.Error));
-        Assert.StartsWith("A off (start): System.InvalidOperationException: boom", e);
+        _guard.Start("A", static () => throw new InvalidOperationException("boom")).Should().BeFalse();
+        _guard.IsOff("A").Should().BeTrue();
+        _log.Of(LogLevel.Error).Should().ContainSingle().Which.Should()
+            .StartWith("A off (start): System.InvalidOperationException: boom");
     }
 
     [Fact]
-    public void UnknownFeature_IsNotOff() => Assert.False(_guard.IsOff("never seen"));
+    public void UnknownFeature_IsNotOff() => _guard.IsOff("never seen").Should().BeFalse();
 
     [Fact]
     public void FeatureNames_AreCaseSensitive()
     {
         _guard.Fail("Search", new Exception());
-        Assert.True(_guard.IsOff("Search"));
-        Assert.False(_guard.IsOff("search"));
+        _guard.IsOff("Search").Should().BeTrue();
+        _guard.IsOff("search").Should().BeFalse();
     }
 
     [Fact]
@@ -61,7 +62,7 @@ public class FeatureGuardTests : IDisposable
         _guard.AddTick("B", () => order.Add("B"));
         _guard.AddTick("A", () => order.Add("A2"));
         _guard.TickAll();
-        Assert.Equal(new[] { "A", "B", "A2" }, order);
+        order.Should().Equal("A", "B", "A2");
     }
 
     [Fact]
@@ -81,12 +82,12 @@ public class FeatureGuardTests : IDisposable
         _guard.TickAll();
 
         // Once first A call fails, second A call is skipped from same pass on.
-        Assert.Equal(1, a);
-        Assert.Equal(0, a2);
-        Assert.Equal(3, b);
-        Assert.True(_guard.IsOff("A"));
-        Assert.False(_guard.IsOff("B"));
-        Assert.StartsWith("A off (tick): ", Assert.Single(_log.Of(LogLevel.Error)));
+        a.Should().Be(1);
+        a2.Should().Be(0);
+        b.Should().Be(3);
+        _guard.IsOff("A").Should().BeTrue();
+        _guard.IsOff("B").Should().BeFalse();
+        _log.Of(LogLevel.Error).Should().ContainSingle().Which.Should().StartWith("A off (tick): ");
     }
 
     [Fact]
@@ -100,9 +101,9 @@ public class FeatureGuardTests : IDisposable
         _guard.SceneReadyAll();
         _guard.TickAll();
 
-        Assert.Equal(0, ticks);
-        Assert.Equal(1, other);
-        Assert.StartsWith("A off (scene ready): ", Assert.Single(_log.Of(LogLevel.Error)));
+        ticks.Should().Be(0);
+        other.Should().Be(1);
+        _log.Of(LogLevel.Error).Should().ContainSingle().Which.Should().StartWith("A off (scene ready): ");
     }
 
     [Fact]
@@ -115,8 +116,8 @@ public class FeatureGuardTests : IDisposable
         _guard.TickAll();
         _guard.Run("A", () => runs++);
 
-        Assert.Equal(0, ticks);
-        Assert.Equal(0, runs);
+        ticks.Should().Be(0);
+        runs.Should().Be(0);
     }
 
     [Fact]
@@ -130,9 +131,9 @@ public class FeatureGuardTests : IDisposable
         });
         _guard.Run("A", () => n++);
 
-        Assert.Equal(1, n);
-        Assert.True(_guard.IsOff("A"));
-        Assert.StartsWith("A off (run): ", Assert.Single(_log.Of(LogLevel.Error)));
+        n.Should().Be(1);
+        _guard.IsOff("A").Should().BeTrue();
+        _log.Of(LogLevel.Error).Should().ContainSingle().Which.Should().StartWith("A off (run): ");
     }
 
     [Fact]
@@ -141,8 +142,7 @@ public class FeatureGuardTests : IDisposable
         _guard.Fail("A", new Exception("first"));
         _guard.Fail("A", new Exception("second"));
         _guard.Run("A", static () => throw new Exception("third"));
-        string e = Assert.Single(_log.Of(LogLevel.Error));
-        Assert.Contains("first", e);
+        _log.Of(LogLevel.Error).Should().ContainSingle().Which.Should().Contain("first");
     }
 
     [Fact]
@@ -155,8 +155,8 @@ public class FeatureGuardTests : IDisposable
 
         Parallel.For(0, 200, i => g.Fail("A", new Exception(i.ToString())));
 
-        Assert.Single(lines);
-        Assert.True(g.IsOff("A"));
+        lines.Should().ContainSingle();
+        g.IsOff("A").Should().BeTrue();
     }
 
     /// <summary>Checks that turning off other feature inside failing call logs each one once.</summary>
@@ -169,9 +169,9 @@ public class FeatureGuardTests : IDisposable
             throw new Exception("a");
         });
         _guard.TickAll();
-        Assert.True(_guard.IsOff("A"));
-        Assert.True(_guard.IsOff("B"));
-        Assert.Equal(2, _log.Of(LogLevel.Error).Count());
+        _guard.IsOff("A").Should().BeTrue();
+        _guard.IsOff("B").Should().BeTrue();
+        _log.Of(LogLevel.Error).Should().HaveCount(2);
     }
 
     [Fact]
@@ -179,7 +179,7 @@ public class FeatureGuardTests : IDisposable
     {
         _guard.TickAll();
         _guard.SceneReadyAll();
-        Assert.Empty(_log.Lines);
+        _log.Lines.Should().BeEmpty();
     }
 
     /// <summary>Checks that guard never touches settings.</summary>
@@ -190,8 +190,8 @@ public class FeatureGuardTests : IDisposable
         foreach (FieldInfo f in typeof(FeatureGuard).GetFields(BindingFlags.Instance | BindingFlags.Static |
                                                                BindingFlags.Public | BindingFlags.NonPublic))
         {
-            Assert.False(typeof(ConfigFile).IsAssignableFrom(f.FieldType), f.Name);
-            Assert.False(typeof(ConfigEntryBase).IsAssignableFrom(f.FieldType), f.Name);
+            typeof(ConfigFile).IsAssignableFrom(f.FieldType).Should().BeFalse(f.Name);
+            typeof(ConfigEntryBase).IsAssignableFrom(f.FieldType).Should().BeFalse(f.Name);
         }
 
         using var dir = new TempDir();
@@ -203,7 +203,7 @@ public class FeatureGuardTests : IDisposable
         _guard.Start("Feature", static () => throw new Exception());
         _guard.Fail("Feature", new Exception());
 
-        Assert.True(on.Value);
-        Assert.Equal(before, File.ReadAllText(path));
+        on.Value.Should().BeTrue();
+        File.ReadAllText(path).Should().Be(before);
     }
 }

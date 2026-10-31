@@ -1,3 +1,4 @@
+#nullable enable
 using BepInEx.Bootstrap;
 using BepInEx.Logging;
 using UnityEngine;

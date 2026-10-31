@@ -1,3 +1,4 @@
+#nullable enable
 using BepInEx.Logging;
 
 // ReSharper disable once CheckNamespace
@@ -67,10 +68,10 @@ internal sealed class FeatureGuard
 
     /// <summary>Registers per-frame call.</summary>
     /// <remarks>Delegate made once, so no allocation per frame.</remarks>
-    public void AddTick(string feature, Action tick) => _ticks.Add(new Entry { Feature = feature, Action = tick });
+    public void AddTick(string feature, Action tick) => _ticks.Add(new Entry(feature, tick));
 
     /// <summary>Registers call that <see cref="SceneReadyAll"/> runs at every scene ready.</summary>
-    public void AddSceneReady(string feature, Action ready) => _sceneReady.Add(new Entry { Feature = feature, Action = ready });
+    public void AddSceneReady(string feature, Action ready) => _sceneReady.Add(new Entry(feature, ready));
 
     /// <summary>Runs per-frame calls of features not off, in registration order.</summary>
     public void TickAll() => RunAll(_ticks, "tick");
@@ -131,7 +132,13 @@ internal sealed class FeatureGuard
 
     private sealed class Entry
     {
-        public string Feature;
-        public Action Action;
+        public readonly string Feature;
+        public readonly Action Action;
+
+        public Entry(string feature, Action action)
+        {
+            Feature = feature;
+            Action = action;
+        }
     }
 }
