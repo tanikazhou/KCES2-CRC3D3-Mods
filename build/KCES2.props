@@ -1,0 +1,62 @@
+<Project>
+  <PropertyGroup>
+    <KcesRoot Condition="'$(KcesRoot)' == ''">$(KCES2_ROOT)</KcesRoot>
+    <KcesManaged>$(KcesRoot)/CR EditSystem_Data/Managed</KcesManaged>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <CopyToGame Condition="'$(CopyToGame)' == ''">false</CopyToGame>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(GameTarget)' == 'KCES2'">
+    <Reference Include="Assembly-CSharp"><HintPath>$(KcesManaged)/Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="I2.Localization"><HintPath>$(KcesManaged)/I2.Localization.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="WfSystem.FileSystem"><HintPath>$(KcesManaged)/WfSystem.FileSystem.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="WfSystem.Serialization"><HintPath>$(KcesManaged)/WfSystem.Serialization.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="MessagePack.Annotations"><HintPath>$(KcesManaged)/MessagePack.Annotations.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.UI"><HintPath>$(KcesManaged)/UnityEngine.UI.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="DOTween"><HintPath>$(KcesManaged)/DOTween.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="netstandard"><HintPath>$(KcesManaged)/netstandard.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <_KcesHowTo>Set the KCES2 folder (the folder with CR EditSystem.exe) in one of three ways: (1) dotnet build -p:KcesRoot="&lt;folder&gt;", (2) copy LocalPaths.props.user.example to LocalPaths.props.user in the repository root and set KcesRoot there, (3) set the environment variable KCES2_ROOT.</_KcesHowTo>
+  </PropertyGroup>
+
+  <Target Name="CheckKcesReferences" BeforeTargets="ResolveAssemblyReferences;CoreCompile">
+    <ItemGroup>
+      <_KcesInstallRef Include="@(Reference->'%(HintPath)')" Condition="'%(Reference.HintPath)' != '' and $([System.String]::Copy('%(Reference.HintPath)').StartsWith('$(KcesManaged)'))" />
+    </ItemGroup>
+    <Error Condition="'$(GameTarget)' == 'KCES2' and '$(KcesRoot)' == ''" Text="$(MSBuildProjectName) needs the KCES2 folder, but KcesRoot is not set. $(_KcesHowTo)" />
+    <Error Condition="'@(_KcesInstallRef)' != '' and '$(GameTarget)' != 'KCES2'" Text="$(MSBuildProjectName) (GameTarget '$(GameTarget)') references the KCES2 reference set: @(_KcesInstallRef). Only projects with GameTarget KCES2 may use it." />
+    <Error Condition="'$(KcesRoot)' != '' and '@(_KcesInstallRef)' != '' and !Exists('$(KcesManaged)')" Text="KCES2 folder not found: $(MSBuildProjectName) needs the KCES2 DLLs in &quot;$([System.IO.Path]::GetFullPath('$(KcesManaged)'))&quot; (KcesRoot = &quot;$([System.IO.Path]::GetFullPath('$(KcesRoot)'))&quot;). $(_KcesHowTo)" />
+    <Error Condition="'$(KcesRoot)' != '' and '@(_KcesInstallRef)' != '' and Exists('$(KcesManaged)') and !Exists('%(_KcesInstallRef.Identity)')" Text="KCES2 DLL not found: &quot;%(_KcesInstallRef.FullPath)&quot; (KcesRoot = &quot;$([System.IO.Path]::GetFullPath('$(KcesRoot)'))&quot;). $(_KcesHowTo)" />
+  </Target>
+
+  <Target Name="CopyPluginToInstall" AfterTargets="Build" Condition="'$(CopyToGame)' == 'true' and '$(IsTestProject)' != 'true' and '$(IsTestKit)' != 'true'">
+    <PropertyGroup>
+      <PluginPrograms Condition="'$(PluginPrograms)' == ''">$(GameTarget)</PluginPrograms>
+    </PropertyGroup>
+    <ItemGroup>
+      <_PluginRoot Include="$(KcesRoot)" Condition="'$(KcesRoot)' != '' and ('$(PluginPrograms)' == 'KCES2' or '$(PluginPrograms)' == 'Both')" />
+      <_PluginRoot Include="$(ExtraPluginRoots)" Condition="'$(PluginPrograms)' == 'Both'" />
+      <_PluginRoot Include="@(PluginInstallRoot)" />
+      <_PluginRootOk Include="@(_PluginRoot)" Condition="Exists('%(Identity)/BepInEx')" />
+      <_PluginRootMissing Include="@(_PluginRoot)" Condition="!Exists('%(Identity)/BepInEx')" />
+    </ItemGroup>
+    <Error Condition="'$(PluginPrograms)' == 'KCES2' and '$(KcesRoot)' != '' and !Exists('$(KcesRoot)/BepInEx')" Text="$(MSBuildProjectName): CopyToGame needs BepInEx in the KCES2 folder: &quot;$([System.IO.Path]::GetFullPath('$(KcesRoot)/BepInEx'))&quot; not found. Install BepInEx 5 there first." />
+    <Warning Condition="'@(_PluginRootMissing)' != ''" Text="$(MSBuildProjectName): CopyToGame skips folders without BepInEx: @(_PluginRootMissing)." />
+    <Warning Condition="'@(_PluginRootOk)' == ''" Text="$(MSBuildProjectName): CopyToGame found no install folder with BepInEx. Nothing copied." />
+    <MSBuild Condition="'@(_PluginRootOk)' != ''" Projects="$(MSBuildProjectFullPath)" Targets="_CopyPluginToOneRoot" Properties="_PluginDest=%(_PluginRootOk.FullPath)/BepInEx/plugins/$(AssemblyName)/" />
+  </Target>
+
+  <Target Name="_CopyPluginToOneRoot">
+    <ItemGroup>
+      <_PluginExtra Include="@(None)" Condition="'%(None.CopyToOutputDirectory)' == 'PreserveNewest' or '%(None.CopyToOutputDirectory)' == 'Always'" />
+    </ItemGroup>
+    <Copy SourceFiles="@(IntermediateAssembly)" DestinationFiles="$(_PluginDest)$(TargetFileName).tmp" />
+    <Move SourceFiles="$(_PluginDest)$(TargetFileName).tmp" DestinationFiles="$(_PluginDest)$(TargetFileName)" OverwriteReadOnlyFiles="true" />
+    <Copy Condition="'@(_PluginExtra)' != ''" SourceFiles="@(_PluginExtra)" DestinationFiles="@(_PluginExtra->'$(_PluginDest)%(RelativeDir)%(Filename)%(Extension)')" />
+    <Message Importance="high" Text="$(MSBuildProjectName): copied $(TargetFileName) to $([System.IO.Path]::GetFullPath('$(_PluginDest)'))" />
+  </Target>
+</Project>

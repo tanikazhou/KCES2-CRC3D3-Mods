@@ -1,0 +1,36 @@
+<Project>
+  <PropertyGroup>
+    <Crc3d3Root Condition="'$(Crc3d3Root)' == ''">$(CRC3D3_ROOT)</Crc3d3Root>
+    <Crc3d3Managed>$(Crc3d3Root)/CRC 3D 3_Data/Managed</Crc3d3Managed>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(GameTarget)' == 'CRC3D3'">
+    <Reference Include="Assembly-CSharp"><HintPath>$(Crc3d3Managed)/Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Unity.TextMeshPro"><HintPath>$(Crc3d3Managed)/Unity.TextMeshPro.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="I2.Localization"><HintPath>$(Crc3d3Managed)/I2.Localization.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="WfSystem.FileSystem"><HintPath>$(Crc3d3Managed)/WfSystem.FileSystem.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="WfSystem.Serialization"><HintPath>$(Crc3d3Managed)/WfSystem.Serialization.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="MessagePack.Annotations"><HintPath>$(Crc3d3Managed)/MessagePack.Annotations.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.UI"><HintPath>$(Crc3d3Managed)/UnityEngine.UI.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="DOTween"><HintPath>$(Crc3d3Managed)/DOTween.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="netstandard"><HintPath>$(Crc3d3Managed)/netstandard.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+
+  <ItemGroup Condition="('$(GameTarget)' == 'CRC3D3' or '$(PluginPrograms)' == 'Both') and '$(Crc3d3Root)' != ''">
+    <PluginInstallRoot Include="$(Crc3d3Root)" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <_Crc3d3HowTo>Set the CRC3D3 folder (the folder with CRC 3D 3.exe) in one of three ways: (1) dotnet build -p:Crc3d3Root="&lt;folder&gt;", (2) copy LocalPaths.props.user.example to LocalPaths.props.user in the repository root and set Crc3d3Root there, (3) set the environment variable CRC3D3_ROOT.</_Crc3d3HowTo>
+  </PropertyGroup>
+  <Target Name="CheckCrc3d3References" BeforeTargets="ResolveAssemblyReferences;CoreCompile">
+    <ItemGroup>
+      <_Crc3d3InstallRef Include="@(Reference->'%(HintPath)')" Condition="'%(Reference.HintPath)' != '' and $([System.String]::Copy('%(Reference.HintPath)').StartsWith('$(Crc3d3Managed)'))" />
+    </ItemGroup>
+    <Error Condition="'$(GameTarget)' == 'CRC3D3' and '$(Crc3d3Root)' == ''" Text="$(MSBuildProjectName) needs the CRC3D3 folder, but Crc3d3Root is not set. $(_Crc3d3HowTo)" />
+    <Error Condition="'@(_Crc3d3InstallRef)' != '' and '$(GameTarget)' != 'CRC3D3'" Text="$(MSBuildProjectName) (GameTarget '$(GameTarget)') references the CRC3D3 reference set: @(_Crc3d3InstallRef). Only projects with GameTarget CRC3D3 may use it." />
+    <Error Condition="'$(Crc3d3Root)' != '' and '@(_Crc3d3InstallRef)' != '' and !Exists('$(Crc3d3Managed)')" Text="CRC3D3 folder not found: $(MSBuildProjectName) needs the CRC3D3 DLLs in &quot;$([System.IO.Path]::GetFullPath('$(Crc3d3Managed)'))&quot; (Crc3d3Root = &quot;$([System.IO.Path]::GetFullPath('$(Crc3d3Root)'))&quot;). $(_Crc3d3HowTo)" />
+    <Error Condition="'$(Crc3d3Root)' != '' and '@(_Crc3d3InstallRef)' != '' and Exists('$(Crc3d3Managed)') and !Exists('%(_Crc3d3InstallRef.Identity)')" Text="CRC3D3 DLL not found: &quot;%(_Crc3d3InstallRef.FullPath)&quot; (Crc3d3Root = &quot;$([System.IO.Path]::GetFullPath('$(Crc3d3Root)'))&quot;). $(_Crc3d3HowTo)" />
+    <Error Condition="'$(CopyToGame)' == 'true' and '$(GameTarget)' == 'CRC3D3' and '$(Crc3d3Root)' != '' and !Exists('$(Crc3d3Root)/BepInEx')" Text="$(MSBuildProjectName): CopyToGame needs BepInEx in the CRC3D3 folder: &quot;$([System.IO.Path]::GetFullPath('$(Crc3d3Root)/BepInEx'))&quot; not found. Install BepInEx 5 there first." />
+  </Target>
+</Project>

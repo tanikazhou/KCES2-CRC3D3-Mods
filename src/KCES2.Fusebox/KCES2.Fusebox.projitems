@@ -1,0 +1,19 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>a92251cb-6e98-412c-9cb2-2922d26991ff</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>KCES2.Fusebox</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)FeatureGuard.cs"/>
+    <Compile Include="$(MSBuildThisFileDirectory)KeyInput.cs"/>
+    <Compile Include="$(MSBuildThisFileDirectory)LogPaths.cs"/>
+    <Compile Include="$(MSBuildThisFileDirectory)ManagerObjectCheck.cs"/>
+    <Compile Include="$(MSBuildThisFileDirectory)SceneReadyDelay.cs"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)README.md"/>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../../src/KCES2.Fusebox/KCES2.Fusebox.projitems" Label="Shared" />
+</Project>

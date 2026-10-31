@@ -1,0 +1,10 @@
+<Project>
+  <ItemGroup>
+    <GlobalAnalyzerConfigFiles Include="$(MSBuildThisFileDirectory)../../build/CodeStyle.globalconfig" />
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)../../build/stylecop.json" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556" PrivateAssets="all" />
+  </ItemGroup>
+  <PropertyGroup>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+</Project>

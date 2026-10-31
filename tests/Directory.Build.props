@@ -1,0 +1,7 @@
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)../Directory.Build.props" />
+  <PropertyGroup Condition="$(MSBuildProjectName.StartsWith('CRC3D3.')) and '$(Crc3d3Root)' != ''">
+    <UnityManagedDir>$(Crc3d3Root)/CRC 3D 3_Data/Managed</UnityManagedDir>
+  </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)../build/Tests.props" />
+</Project>

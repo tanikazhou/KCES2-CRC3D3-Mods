@@ -1,0 +1,6 @@
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)LocalPaths.props.user" Condition="Exists('$(MSBuildThisFileDirectory)LocalPaths.props.user')" />
+  <Import Project="$(MSBuildThisFileDirectory)build/KCES2.Fusebox.props" />
+  <Import Project="$(MSBuildThisFileDirectory)build/KCES2.props" />
+  <Import Project="$(MSBuildThisFileDirectory)build/CRC3D3.props" />
+</Project>

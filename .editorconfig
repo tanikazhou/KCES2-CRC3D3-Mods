@@ -1,0 +1,21 @@
+root = true
+
+[*.{cs,csproj,projitems,props,targets,slnx,globalconfig,json,md,config,example,user}]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+
+[*.cs]
+indent_size = 4
+
+[*.{csproj,projitems,props,targets,slnx,json,config,example,user}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.ks]
+charset = utf-8-bom
+end_of_line = crlf

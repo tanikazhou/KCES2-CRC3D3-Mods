@@ -1,0 +1,19 @@
+*.cs text eol=lf
+*.csproj text eol=lf
+*.projitems text eol=lf
+*.props text eol=lf
+*.targets text eol=lf
+*.slnx text eol=lf
+*.globalconfig text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.config text eol=lf
+*.example text eol=lf
+.editorconfig text eol=lf
+.gitattributes text eol=lf
+.gitignore text eol=lf
+LICENSE text eol=lf
+*.ks -text
+*.tsv -text
+*.txt -text
+*.png binary

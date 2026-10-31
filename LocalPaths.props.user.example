@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <KcesRoot>D:\KISS\CRC3D3_try2\kces2_try</KcesRoot>
+    <Crc3d3Root>D:\KISS\CRC3D3_try2</Crc3d3Root>
+    <CopyToGame>false</CopyToGame>
+  </PropertyGroup>
+</Project>

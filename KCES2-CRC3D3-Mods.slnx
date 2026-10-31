@@ -1,0 +1,34 @@
+<Solution>
+  <Folder Name="/analyzers/">
+    <Project Path="analyzers/KCES2.Fusebox.Style/KCES2.Fusebox.Style.csproj" />
+  </Folder>
+  <Folder Name="/build/">
+    <File Path="build/CodeStyle.globalconfig" />
+    <File Path="build/KCES2.Fusebox.props" />
+    <File Path="build/stylecop.json" />
+    <File Path="build/Tests.props" />
+    <File Path="build/TestSupport/UnityRuntime.cs" />
+  </Folder>
+  <Folder Name="/repo/">
+    <File Path=".editorconfig" />
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path="CODE_STYLE.md" />
+    <File Path="Directory.Build.props" />
+    <File Path="global.json" />
+    <File Path="KCES2-CRC3D3-Mods.sln.DotSettings" />
+    <File Path="LICENSE" />
+    <File Path="LocalPaths.props.user" />
+    <File Path="LocalPaths.props.user.example" />
+    <File Path="nuget.config" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/KCES2.Fusebox/KCES2.Fusebox.shproj" />
+    <Project Path="src/KCES2.Fusebox.Check/KCES2.Fusebox.Check.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <File Path="tests/Directory.Build.props" />
+    <Project Path="tests/KCES2.Fusebox.Tests/KCES2.Fusebox.Tests.csproj" />
+  </Folder>
+</Solution>

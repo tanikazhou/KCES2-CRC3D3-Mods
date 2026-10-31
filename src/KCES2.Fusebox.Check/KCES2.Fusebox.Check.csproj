@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <PackageId>KCES2.Fusebox</PackageId>
+  </PropertyGroup>
+  <Import Project="../KCES2.Fusebox/KCES2.Fusebox.projitems" Label="Shared" />
+</Project>

@@ -1,0 +1,62 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <OutputType>Exe</OutputType>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn> <!-- Missing XML doc on a public type or member, OK for Tests -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Update="BepInEx.Core" ExcludeAssets="none"/>
+    <PackageReference Update="HarmonyX" ExcludeAssets="none"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" Version="4.0.2"/>
+    <PackageReference Include="xunit.runner.visualstudio" Version="4.0.1" PrivateAssets="all"/>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.1"/>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <UnityManagedDir Condition="'$(UnityManagedDir)' == '' and '$(KcesRoot)' != ''">$(KcesRoot)/CR EditSystem_Data/Managed</UnityManagedDir>
+    <UnityRuntime Condition="'$(UnityManagedDir)' != '' and Exists('$(UnityManagedDir)/UnityEngine.CoreModule.dll')">true</UnityRuntime>
+    <UnityRuntime Condition="'$(UnityRuntime)' != 'true'">false</UnityRuntime>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(UnityRuntime)' == 'true'">
+    <None Include="$(UnityManagedDir)/UnityEngine.CoreModule.dll" Link="UnityEngine.CoreModule.dll" CopyToOutputDirectory="PreserveNewest" Visible="false"/>
+    <None Include="$(UnityManagedDir)/UnityEngine.dll" Link="UnityEngine.dll" CopyToOutputDirectory="PreserveNewest" Visible="false"/>
+  </ItemGroup>
+  <ItemGroup Condition="'$(UnityRuntime)' != 'true'">
+    <PackageReference Update="UnityEngine.Modules" ExcludeAssets="none"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)TestSupport/UnityRuntime.cs" Link="TestSupport/UnityRuntime.cs"/>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>UnityRuntime</_Parameter1>
+      <_Parameter2>$(UnityRuntime)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <Target Name="ForeignFilesAnalyzerConfig" BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <_ForeignFile Include="@(Compile->'%(FullPath)'->Replace('\', '/'))"
+                    Condition="!$([System.String]::Copy('%(Compile.FullPath)').StartsWith('$(MSBuildProjectDirectory)')) and !$([System.String]::Copy('%(Compile.FullPath)').StartsWith('$(MSBuildThisFileDirectory)'))"/>
+    </ItemGroup>
+    <PropertyGroup>
+      <_ForeignFilesConfig>$(IntermediateOutputPath)ForeignFiles.globalconfig</_ForeignFilesConfig>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(_ForeignFilesConfig)" Overwrite="true" WriteOnlyWhenDifferent="true"
+                      Lines="is_global = true;@(_ForeignFile->'[%(Identity)]%0Adotnet_diagnostic.IDE0056.severity = none%0Adotnet_diagnostic.IDE0057.severity = none')"/>
+    <ItemGroup>
+      <EditorConfigFiles Include="$(_ForeignFilesConfig)"/>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="RestoreBepinRefsForTests" AfterTargets="SkipBepinRefs">
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Include="@(RuntimeCopyLocalItems)" Condition="'%(RuntimeCopyLocalItems.NuGetPackageId)' == 'BepInEx.BaseLib' or '%(RuntimeCopyLocalItems.NuGetPackageId)' == 'HarmonyX' or '%(RuntimeCopyLocalItems.NuGetPackageId)' == 'Mono.Cecil' or '%(RuntimeCopyLocalItems.NuGetPackageId)' == 'MonoMod.RuntimeDetour' or '%(RuntimeCopyLocalItems.NuGetPackageId)' == 'MonoMod.Utils'"/>
+    </ItemGroup>
+  </Target>
+</Project>
