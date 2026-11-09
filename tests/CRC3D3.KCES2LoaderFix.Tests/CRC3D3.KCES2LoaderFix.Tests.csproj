@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <Compile Include="../../src/CRC3D3.KCES2LoaderFix/DoorstopEnv.cs" Link="Tested/DoorstopEnv.cs" />
+  </ItemGroup>
+</Project>

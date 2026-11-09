@@ -49,7 +49,7 @@
       <_ForeignFilesConfig>$(IntermediateOutputPath)ForeignFiles.globalconfig</_ForeignFilesConfig>
     </PropertyGroup>
     <WriteLinesToFile File="$(_ForeignFilesConfig)" Overwrite="true" WriteOnlyWhenDifferent="true"
-                      Lines="is_global = true;@(_ForeignFile->'[%(Identity)]%0Adotnet_diagnostic.IDE0056.severity = none%0Adotnet_diagnostic.IDE0057.severity = none')"/>
+                      Lines="is_global = true;@(_ForeignFile->'[%(Identity)]%0Adotnet_diagnostic.IDE0056.severity = none%0Adotnet_diagnostic.IDE0057.severity = none%0Adotnet_diagnostic.CS1574.severity = none')"/>
     <ItemGroup>
       <EditorConfigFiles Include="$(_ForeignFilesConfig)"/>
     </ItemGroup>

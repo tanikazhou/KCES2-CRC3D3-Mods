@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <GameTarget>CRC3D3</GameTarget>
+  </PropertyGroup>
+  <Import Project="../KCES2.Fusebox/KCES2.Fusebox.projitems" Label="Shared" />
+</Project>

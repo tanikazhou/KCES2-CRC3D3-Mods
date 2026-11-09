@@ -5,5 +5,4 @@
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Chainloader/@EntryIndexedValue">True</s:Boolean>
     <s:Boolean x:Key="/Default/UserDictionary/Words/=projitems/@EntryIndexedValue">True</s:Boolean>
     <s:Boolean x:Key="/Default/UserDictionary/Words/=slnx/@EntryIndexedValue">True</s:Boolean>
-    <s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=InconsistentNaming/@EntryIndexedValue">DO_NOT_SHOW</s:String>
 </wpf:ResourceDictionary>
