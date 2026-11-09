@@ -2,6 +2,12 @@
 
 BepInEx 5 plugins for KCES2 and CRC3D3.
 
+## Plugins for KCES2 and CRC3D3
+
+| Plugin          | Effect                                               |
+|-----------------|------------------------------------------------------|
+| KCES2.SkipIntro | Skips the logo and the caution screen at start.      |
+
 ## Local paths
 
 Plugin projects need the game folders.

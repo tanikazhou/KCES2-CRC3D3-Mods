@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <GameTarget>KCES2</GameTarget>
+    <PluginPrograms>Both</PluginPrograms>
+  </PropertyGroup>
+  <Import Project="../KCES2.Fusebox/KCES2.Fusebox.projitems" Label="Shared" />
+</Project>

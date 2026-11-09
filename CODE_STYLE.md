@@ -174,6 +174,29 @@ private static void Attach(KCES2EditSliderHandle handle)
 }
 ```
 
+## Unity pitfalls
+
+No tool finds these errors, unless the rule names one. Reviewers look for them in every plugin.
+
+1. Destroyed objects. A destroyed Unity object is not C# `null`. Only Unity's `==` gives `true` for it.
+   - `?.`, `??`, `??=` and `is null` skip Unity's `==` (UNT0007, UNT0008, UNT0023, UNT0029, and Formatting rule 7).
+   - A Unity object in an `object`, interface or unconstrained generic variable also skips it. Cast the value to `UnityEngine.Object` before the comparison.
+2. Cost of `==`. Each `==` on a Unity object calls native code. In a per-frame loop over many objects, keep the result or the instance ID. Rider marks this comparison in code that `Update` or a coroutine reaches.
+3. Native memory. The garbage collector does not free a `Texture2D`, `RenderTexture`, `Mesh` or `Material` that plugin code makes. Call `Destroy` on it after its last use.
+   - `Renderer.material` and `MeshFilter.mesh` make a copy at the first call. Each copy needs `Destroy` too.
+   - `sharedMaterial` and `sharedMesh` change the asset for every object that uses it.
+4. Main thread. Call the Unity API only from the main thread. Some KCES2 loaders call plugin code from other threads. Put that work in a queue that `Update` reads.
+5. Coroutines. When its object is disabled or destroyed, a coroutine stops without a message.
+   - An exception also stops it, and only the Unity log shows the exception. Catch exceptions inside the coroutine and give them to `FeatureGuard`.
+   - C# does not allow `yield return` in a `try` that has a `catch`. Put the `try` around the code between two `yield` statements (`KCES2.SkipIntro`, `StartupSkip.WaitThenNext`).
+6. Paused time. When `Time.timeScale` is 0, `Time.deltaTime` is 0 and `WaitForSeconds` never ends. Plugin timers and plugin UI use `Time.unscaledDeltaTime` and `WaitForSecondsRealtime`.
+7. Scene loads. A scene load destroys every object, except root objects with `DontDestroyOnLoad`. Remove handlers from static events (for example `SceneManager.sceneLoaded`) in `OnDestroy`. Else the event calls into a destroyed object.
+8. Allocations per frame. The Mono garbage collector in Unity is not generational, so small allocations in every frame cause frame-time spikes. Keep LINQ, string concatenation, closures, `GetComponents`, `FindObjectsOfType` and `GameObject.Find` out of `Update`.
+9. Harmony and inlining. The Mono JIT can copy a small method (for example a getter) into its callers. A patch then has no effect at those calls, but the log still reports the patch. Patch the caller in that case.
+   - Native methods (`InternalCall`) take no normal patch.
+   - Do not patch methods of Unity structs: a patch on `ScriptableRenderContext.Cull` crashed CRC3D3.
+10. Missing types. Mono compiles a whole method at its first call. A method can name a type or member that the running program does not have. Then the exception comes before the first line, outside every `try`. In a plugin for both programs, put code for one program in its own method with `[MethodImpl(MethodImplOptions.NoInlining)]`.
+
 ## Tooling
 
 1. Roslyn analyzers: `EnforceCodeStyleInBuild` for the IDE rules, IDE1006 (naming) and IDE0055 (formatting). `EnableNETAnalyzers` for CA1051 (net48 has the .NET analyzers off by default). IDE0320 (static anonymous function) is a convention: the rule file sets it, but the command-line build does not report it (SDK 10.0.113). The IDE reports it.
