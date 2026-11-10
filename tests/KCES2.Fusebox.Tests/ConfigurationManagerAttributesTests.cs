@@ -36,11 +36,10 @@ public class ConfigurationManagerAttributesTests
     [Fact]
     public void PublicFields_MatchUpstreamNamesAndTypes()
     {
-        Dictionary<string, Type> fields = typeof(ConfigurationManagerAttributes)
+        typeof(ConfigurationManagerAttributes)
             .GetFields(BindingFlags.Instance | BindingFlags.Public)
-            .ToDictionary(static f => f.Name, static f => f.FieldType);
-
-        fields.Should().Equal(_upstream);
+            .ToDictionary(static f => f.Name, static f => f.FieldType)
+            .Should().Equal(_upstream);
     }
 
     [Fact]
