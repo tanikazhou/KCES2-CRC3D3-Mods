@@ -33,6 +33,9 @@ internal sealed class FeatureGuard
     private readonly List<Entry> _ticks = [];
     private readonly List<Entry> _sceneReady = [];
 
+    /// <remarks>Key hints per feature, hidden when feature turns off; guarded by same lock as stopped features.</remarks>
+    private readonly Dictionary<string, KeyHint[]> _hints = new(StringComparer.Ordinal);
+
     /// <remarks>Count of stopped features, so <see cref="IsOff"/> skips lock while none is stopped (normal case, called per frame).</remarks>
     private volatile int _offCount;
 
@@ -59,9 +62,21 @@ internal sealed class FeatureGuard
     }
 
     /// <summary>Runs start steps (Bind, patches, registration).</summary>
+    /// <param name="feature">Feature name.</param>
+    /// <param name="start">Start steps.</param>
+    /// <param name="hints">Key hints of feature, or <see langword="null"/>.
+    /// When feature turns off, guard sets <see cref="KeyHint.Active"/> to <see langword="false"/> and calls <see cref="KeyHint.Changed"/>.</param>
     /// <returns><see langword="true"/> if start steps ran without exception; otherwise, <see langword="false"/> (feature is then off).</returns>
-    public bool Start(string feature, Action start)
+    public bool Start(string feature, Action start, KeyHint[]? hints = null)
     {
+        if (hints is { Length: > 0 })
+        {
+            lock (_off)
+            {
+                _hints[feature] = hints;
+            }
+        }
+
         try
         {
             start();
@@ -133,6 +148,7 @@ internal sealed class FeatureGuard
 
     private void Disable(string feature, string phase, Exception e)
     {
+        KeyHint[]? hints;
         lock (_off)
         {
             if (!_off.Add(feature))
@@ -141,9 +157,37 @@ internal sealed class FeatureGuard
             }
 
             _offCount = _off.Count;
+            _hints.TryGetValue(feature, out hints);
         }
 
         _log.LogError($"{feature} off ({phase}): {e}");
+        if (hints != null)
+        {
+            HideHints(feature, hints);
+        }
+    }
+
+    /// <summary>Hides key hint rows of stopped feature.</summary>
+    /// <remarks>Runs outside lock: <see cref="KeyHint.Changed"/> is code of key hints plugin.</remarks>
+    private void HideHints(string feature, KeyHint[] hints)
+    {
+        foreach (KeyHint hint in hints)
+        {
+            if (hint == null)
+            {
+                continue;
+            }
+
+            hint.Active = false;
+            try
+            {
+                hint.Changed?.Invoke();
+            }
+            catch (Exception e)
+            {
+                _log.LogWarning($"{feature} key hint not updated: {e.Message}");
+            }
+        }
     }
 
     private sealed class Entry

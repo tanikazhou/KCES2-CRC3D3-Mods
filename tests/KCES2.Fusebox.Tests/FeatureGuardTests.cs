@@ -218,6 +218,97 @@ public class FeatureGuardTests : IDisposable
         _log.Lines.Should().BeEmpty();
     }
 
+    [Fact]
+    public void Start_Throws_HintsInactiveAndChangedOnce()
+    {
+        int calls = 0;
+        var hint = new KeyHint { Changed = () => calls++ };
+
+        _guard.Start("A", static () => throw new InvalidOperationException("boom"), [hint]);
+
+        hint.Active.Should().BeFalse();
+        calls.Should().Be(1);
+    }
+
+    [Fact]
+    public void Fail_AfterStart_HintsInactiveAndChangedOnce()
+    {
+        int calls = 0;
+        var hint = new KeyHint { Changed = () => calls++ };
+        _guard.Start("A", static () => { }, [hint]).Should().BeTrue();
+        hint.Active.Should().BeTrue();
+
+        _guard.Fail("A", new Exception());
+
+        hint.Active.Should().BeFalse();
+        calls.Should().Be(1);
+    }
+
+    [Fact]
+    public void Disable_Twice_ChangedOnce()
+    {
+        int calls = 0;
+        var hint = new KeyHint { Changed = () => calls++ };
+        _guard.Start("A", static () => { }, [hint]);
+
+        _guard.Fail("A", new Exception());
+        _guard.Fail("A", new Exception());
+
+        calls.Should().Be(1);
+    }
+
+    [Fact]
+    public void Disable_OtherFeature_LeavesHintActive()
+    {
+        int calls = 0;
+        var hint = new KeyHint { Changed = () => calls++ };
+        _guard.Start("A", static () => { }, [hint]);
+
+        _guard.Fail("B", new Exception());
+
+        hint.Active.Should().BeTrue();
+        calls.Should().Be(0);
+    }
+
+    [Fact]
+    public void Disable_ChangedThrows_OtherHintsStillSetAndWarnsOnce()
+    {
+        int calls = 0;
+        var bad = new KeyHint { Changed = static () => throw new InvalidOperationException("handler") };
+        var good = new KeyHint { Changed = () => calls++ };
+        _guard.Start("A", static () => { }, [bad, good]);
+
+        _guard.Fail("A", new Exception());
+
+        bad.Active.Should().BeFalse();
+        good.Active.Should().BeFalse();
+        calls.Should().Be(1);
+        _log.Of(LogLevel.Warning).Should().ContainSingle().Which.Should().Contain("handler");
+    }
+
+    [Fact]
+    public void Disable_HintWithoutHandler_OnlyInactive()
+    {
+        var hint = new KeyHint();
+        _guard.Start("A", static () => { }, [hint]);
+
+        FluentActions.Invoking(() => _guard.Fail("A", new Exception())).Should().NotThrow();
+
+        hint.Active.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Disable_ChangedRunsOutsideLock()
+    {
+        var lockFree = new List<bool>();
+        var hint = new KeyHint { Changed = () => lockFree.Add(Task.Run(() => _guard.IsOff("A")).Wait(TimeSpan.FromSeconds(2))) };
+        _guard.Start("A", static () => { }, [hint]);
+
+        _guard.Fail("A", new Exception());
+
+        lockFree.Should().Equal([true], "IsOff on another thread must not wait for lock held during Changed");
+    }
+
     /// <summary>Checks that guard never touches settings.</summary>
     /// <remarks>Guard holds no <see cref="ConfigFile"/> or <see cref="ConfigEntryBase"/> field, and config file is unchanged after failure.</remarks>
     [Fact]
