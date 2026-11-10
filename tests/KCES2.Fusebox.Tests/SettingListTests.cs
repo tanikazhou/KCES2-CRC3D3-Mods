@@ -1,6 +1,7 @@
 using AwesomeAssertions;
 using BepInEx.Configuration;
 using KCES2.Fusebox.Tests.Support;
+using UnityEngine;
 using Xunit;
 
 namespace KCES2.Fusebox.Tests;
@@ -110,6 +111,36 @@ public class SettingListTests : IDisposable
             .And.Contain("## Mouse back button closes open panel.")
             .And.Contain("MouseBackButton = true");
     }
+
+    [Fact]
+    public void Bind_WithHint_PutsHintAfterConfigurationManagerAttributes()
+    {
+        var hint = new KeyHint { Label = "Noclip" };
+
+        ConfigEntry<KeyboardShortcut> entry =
+            _settings.Bind("Noclip", "ToggleKey", new KeyboardShortcut(KeyCode.N), "Key.", hint: hint);
+
+        entry.Description.Tags.Should().HaveCount(2, "ConfigurationManager stops at first unknown tag, so hint goes last");
+        entry.Description.Tags[0].Should().BeOfType<ConfigurationManagerAttributes>();
+        entry.Description.Tags[1].Should().BeSameAs(hint);
+    }
+
+    [Fact]
+    public void BindAdvanced_WithHint_PutsHintAfterConfigurationManagerAttributes()
+    {
+        var hint = new KeyHint();
+
+        ConfigEntry<KeyCode> entry = _settings.BindAdvanced("Noclip", "UpKey", KeyCode.Space, "Key.", hint: hint);
+
+        entry.Description.Tags.Should().HaveCount(2);
+        entry.Description.Tags[0].Should().BeOfType<ConfigurationManagerAttributes>()
+            .Which.IsAdvanced.Should().BeTrue();
+        entry.Description.Tags[1].Should().BeSameAs(hint);
+    }
+
+    [Fact]
+    public void Bind_WithoutHint_HasOnlyConfigurationManagerAttributes() =>
+        Tag(_settings.Bind("A", "B", 1, "C.")).Should().NotBeNull();
 
     private static ConfigurationManagerAttributes Tag(ConfigEntryBase entry) =>
         entry.Description.Tags

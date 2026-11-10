@@ -78,10 +78,11 @@ internal sealed class SettingList
     /// <param name="acceptableValues">Allowed values, or <see langword="null"/>.</param>
     /// <param name="label">Shown name; <see langword="null"/> = made from <paramref name="key"/>.</param>
     /// <param name="attributes">Tag with more fields, one object per setting; list adds its own fields where caller left them null.</param>
+    /// <param name="hint">Key hint row for this setting, or <see langword="null"/>.</param>
     public ConfigEntry<T> Bind<T>(string section, string key, T defaultValue, string description,
         AcceptableValueBase? acceptableValues = null,
-        string? label = null, ConfigurationManagerAttributes? attributes = null) =>
-        Add(section, key, defaultValue, description, acceptableValues, label, attributes, false);
+        string? label = null, ConfigurationManagerAttributes? attributes = null, KeyHint? hint = null) =>
+        Add(section, key, defaultValue, description, acceptableValues, label, attributes, hint, false);
 
     /// <summary>Binds setting that ConfigurationManager shows only with "Advanced settings" on.</summary>
     /// <param name="section">Config file section.</param>
@@ -91,14 +92,15 @@ internal sealed class SettingList
     /// <param name="acceptableValues">Allowed values, or <see langword="null"/>.</param>
     /// <param name="label">Shown name; <see langword="null"/> = made from <paramref name="key"/>.</param>
     /// <param name="attributes">Tag with more fields, one object per setting; list adds its own fields where caller left them null.</param>
+    /// <param name="hint">Key hint row for this setting, or <see langword="null"/>.</param>
     public ConfigEntry<T> BindAdvanced<T>(string section, string key, T defaultValue, string description,
         AcceptableValueBase? acceptableValues = null,
-        string? label = null, ConfigurationManagerAttributes? attributes = null) =>
-        Add(section, key, defaultValue, description, acceptableValues, label, attributes, true);
+        string? label = null, ConfigurationManagerAttributes? attributes = null, KeyHint? hint = null) =>
+        Add(section, key, defaultValue, description, acceptableValues, label, attributes, hint, true);
 
     private ConfigEntry<T> Add<T>(string section, string key, T defaultValue, string description,
         AcceptableValueBase? acceptableValues,
-        string? label, ConfigurationManagerAttributes? attributes, bool advanced)
+        string? label, ConfigurationManagerAttributes? attributes, KeyHint? hint, bool advanced)
     {
         attributes ??= new ConfigurationManagerAttributes();
         attributes.DispName = label ?? attributes.DispName ?? ToLabel(key);
@@ -106,7 +108,8 @@ internal sealed class SettingList
         attributes.Order ??= _nextOrder--;
         if (advanced) attributes.IsAdvanced = true;
 
-        return _config.Bind(section, key, defaultValue,
-            new ConfigDescription(description, acceptableValues, attributes));
+        // ConfigurationManager stops reading tags at first unknown tag object, so hint goes after its attributes.
+        object[] tags = hint == null ? [attributes] : [attributes, hint];
+        return _config.Bind(section, key, defaultValue, new ConfigDescription(description, acceptableValues, tags));
     }
 }
