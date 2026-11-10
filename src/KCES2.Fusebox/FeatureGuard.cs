@@ -33,6 +33,9 @@ internal sealed class FeatureGuard
     private readonly List<Entry> _ticks = [];
     private readonly List<Entry> _sceneReady = [];
 
+    /// <remarks>Count of stopped features, so <see cref="IsOff"/> skips lock while none is stopped (normal case, called per frame).</remarks>
+    private volatile int _offCount;
+
     /// <summary>Initializes guard that logs to plugin log.</summary>
     /// <param name="log">Plugin log for errors of stopped features.</param>
     public FeatureGuard(ManualLogSource log)
@@ -44,6 +47,11 @@ internal sealed class FeatureGuard
     // ReSharper disable once MemberCanBePrivate.Global
     public bool IsOff(string feature)
     {
+        if (_offCount == 0)
+        {
+            return false;
+        }
+
         lock (_off)
         {
             return _off.Contains(feature);
@@ -66,17 +74,17 @@ internal sealed class FeatureGuard
         }
     }
 
-    /// <summary>Registers per-frame call.</summary>
-    /// <remarks>Delegate made once, so no allocation per frame.</remarks>
+    /// <summary>Registers per-frame call. Main thread only.</summary>
+    /// <remarks>Delegate made once; <see cref="TickAll"/> walks list by index, so no allocation per frame. Call added during tick runs in same pass.</remarks>
     public void AddTick(string feature, Action tick) => _ticks.Add(new Entry(feature, tick));
 
-    /// <summary>Registers call that <see cref="SceneReadyAll"/> runs at every scene ready.</summary>
+    /// <summary>Registers call that <see cref="SceneReadyAll"/> runs at every scene ready. Main thread only.</summary>
     public void AddSceneReady(string feature, Action ready) => _sceneReady.Add(new Entry(feature, ready));
 
-    /// <summary>Runs per-frame calls of features not off, in registration order.</summary>
+    /// <summary>Runs per-frame calls of features not off, in registration order. Main thread only.</summary>
     public void TickAll() => RunAll(_ticks, "tick");
 
-    /// <summary>Runs scene-ready calls of features not off, in registration order.</summary>
+    /// <summary>Runs scene-ready calls of features not off, in registration order. Main thread only.</summary>
     public void SceneReadyAll() => RunAll(_sceneReady, "scene ready");
 
     /// <summary>Guards one call.</summary>
@@ -104,8 +112,14 @@ internal sealed class FeatureGuard
 
     private void RunAll(List<Entry> list, string phase)
     {
-        foreach (Entry entry in list.Where(entry => !IsOff(entry.Feature)))
+        for (int i = 0; i < list.Count; i++)
         {
+            Entry entry = list[i];
+            if (IsOff(entry.Feature))
+            {
+                continue;
+            }
+
             try
             {
                 entry.Action();
@@ -125,6 +139,8 @@ internal sealed class FeatureGuard
             {
                 return;
             }
+
+            _offCount = _off.Count;
         }
 
         _log.LogError($"{feature} off ({phase}): {e}");

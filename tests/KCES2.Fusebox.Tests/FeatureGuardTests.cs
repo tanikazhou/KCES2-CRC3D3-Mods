@@ -182,6 +182,42 @@ public class FeatureGuardTests : IDisposable
         _log.Lines.Should().BeEmpty();
     }
 
+    /// <summary>Checks that per-frame path allocates nothing, with no feature off (lock skipped) and with one off (lock taken).</summary>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TickAll_AllocatesNothing(bool oneFeatureOff)
+    {
+        int runs = 0;
+        _guard.AddTick("A", () => runs++);
+        _guard.AddTick("B", static () => { });
+        if (oneFeatureOff) _guard.Fail("B", new Exception());
+
+        _guard.TickAll();
+        long before = GC.GetAllocatedBytesForCurrentThread();
+        for (int i = 0; i < 1000; i++) _guard.TickAll();
+        long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+
+        allocated.Should().Be(0);
+        runs.Should().Be(1001);
+    }
+
+    [Fact]
+    public void AddTick_DuringTick_RunsInSamePass()
+    {
+        var order = new List<string>();
+        _guard.AddTick("A", () =>
+        {
+            order.Add("A");
+            if (order.Count == 1) _guard.AddTick("B", () => order.Add("B"));
+        });
+
+        _guard.TickAll();
+
+        order.Should().Equal("A", "B");
+        _log.Lines.Should().BeEmpty();
+    }
+
     /// <summary>Checks that guard never touches settings.</summary>
     /// <remarks>Guard holds no <see cref="ConfigFile"/> or <see cref="ConfigEntryBase"/> field, and config file is unchanged after failure.</remarks>
     [Fact]
