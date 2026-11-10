@@ -12,6 +12,7 @@ BepInEx 5 plugins for KCES2 and CRC3D3.
 
 | Plugin                | Effect                                                                              |
 |-----------------------|-------------------------------------------------------------------------------------|
+| CRC3D3.DebugTools     | Shows a debug overlay with the field event points in range and their scripts.       |
 | CRC3D3.KCES2LoaderFix | Fixes KCES2 started from CRC3D3 (Edit buttons) loading without its BepInEx plugins. |
 
 ## Local paths

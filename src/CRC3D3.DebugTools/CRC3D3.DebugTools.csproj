@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <GameTarget>CRC3D3</GameTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Com3d2Native"><HintPath>$(Crc3d3Managed)/Com3d2Native.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+  <Import Project="../KCES2.Fusebox/KCES2.Fusebox.projitems" Label="Shared" />
+</Project>

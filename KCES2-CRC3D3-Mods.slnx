@@ -24,6 +24,7 @@
     <File Path="README.md" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/CRC3D3.DebugTools/CRC3D3.DebugTools.csproj" />
     <Project Path="src/CRC3D3.KCES2LoaderFix/CRC3D3.KCES2LoaderFix.csproj" />
     <Project Path="src/KCES2.Fusebox/KCES2.Fusebox.shproj" />
     <Project Path="src/KCES2.Fusebox.Check/KCES2.Fusebox.Check.csproj" />
