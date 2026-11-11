@@ -26,6 +26,7 @@
   <Folder Name="/src/">
     <Project Path="src/CRC3D3.DebugTools/CRC3D3.DebugTools.csproj" />
     <Project Path="src/CRC3D3.KCES2LoaderFix/CRC3D3.KCES2LoaderFix.csproj" />
+    <Project Path="src/CRC3D3.KeyHints/CRC3D3.KeyHints.csproj" />
     <Project Path="src/KCES2.Fusebox/KCES2.Fusebox.shproj" />
     <Project Path="src/KCES2.Fusebox.Check/KCES2.Fusebox.Check.csproj" />
     <Project Path="src/KCES2.SkipIntro/KCES2.SkipIntro.csproj" />
@@ -33,6 +34,7 @@
   <Folder Name="/tests/">
     <File Path="tests/Directory.Build.props" />
     <Project Path="tests/CRC3D3.KCES2LoaderFix.Tests/CRC3D3.KCES2LoaderFix.Tests.csproj" />
+    <Project Path="tests/CRC3D3.KeyHints.Tests/CRC3D3.KeyHints.Tests.csproj" />
     <Project Path="tests/KCES2.Fusebox.Tests/KCES2.Fusebox.Tests.csproj" />
   </Folder>
 </Solution>

@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <Compile Include="../../src/CRC3D3.KeyHints/Discovery/*.cs" Link="Tested/Discovery/%(Filename)%(Extension)" />
+    <Compile Include="../KCES2.Fusebox.Tests/Support/LogCapture.cs" Link="Support/LogCapture.cs" />
+    <Compile Include="../KCES2.Fusebox.Tests/Support/TempDir.cs" Link="Support/TempDir.cs" />
+  </ItemGroup>
+  <Import Project="../../src/KCES2.Fusebox/KCES2.Fusebox.projitems" Label="Shared" />
+</Project>
