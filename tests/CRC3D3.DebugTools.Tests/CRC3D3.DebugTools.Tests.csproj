@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <Compile Include="../../src/CRC3D3.DebugTools/Overlay/PositionText.cs" Link="Tested/Overlay/%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

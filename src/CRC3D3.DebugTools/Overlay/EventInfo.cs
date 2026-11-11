@@ -15,7 +15,8 @@ namespace CRC3D3.DebugTools.Overlay;
 /// <para>
 /// Event driven, no polling: hooks on <see cref="MoveEventPoint"/> trigger enter, exit and disable keep list of points in range;
 /// hooks on prompt changes (<c>SimpleExplanationPop.Open</c>, <c>EventStartImage.RemoveCanStartEvent</c>, <c>ClearCanStartEvents</c>)
-/// and on row changes (<see cref="MoveEventPoint.Setup"/>) mark overlay dirty. Overlay builds text only then.
+/// and on row changes (<see cref="MoveEventPoint.Setup"/>) drop cached text and mark overlay dirty. Text is built only then; overlay
+/// refresh for other sections (player position) appends cached text.
 /// </para>
 /// <para>
 /// Availability is result of game's own <c>CanShowEventNow</c> calls (trigger enter, start key, <c>RefreshFieldEvents</c>), with game time of
@@ -40,19 +41,37 @@ internal static class EventInfo
     private static readonly Dictionary<MoveEventPoint, (bool Available, TimeSpan? At)> _checks = [];
     private static readonly Dictionary<Field.FieldEvent, (string Type, string Script, string Lines)> _rows = [];
     private static readonly Dictionary<string, string> _sources = [];
+    private static readonly StringBuilder _build = new(1024);
 
     private static ConfigEntry<bool> _enabled;
+    private static string _text;
 
     internal static void Bind(SettingList settings)
     {
         _enabled = settings.Bind("Overlay", "EventInfo", true,
             "Show the field event points in range in the debug overlay: event id, start type, the game's last availability check, "
             + "script file and label (and whether the file exists), prompt, time and character conditions, linked character.");
-        _enabled.SettingChanged += (_, _) => DebugOverlay.MarkDirty();
+        _enabled.SettingChanged += static (_, _) => Changed();
     }
 
     /// <summary>Appends event lines; appends nothing when no point is in range and no prompt shows.</summary>
+    /// <remarks>Text is built again only after own hook or setting change (<see cref="Changed"/>), not on refresh for other sections.</remarks>
     internal static void Write(StringBuilder sb)
+    {
+        if (_text == null)
+        {
+            _build.Clear();
+            Build(_build);
+            _text = _build.ToString();
+        }
+
+        sb.Append(_text);
+    }
+
+    /// <summary>Drops cached text, so next refresh builds event lines again (overlay turned on: script source can be known now).</summary>
+    internal static void DropCache() => _text = null;
+
+    private static void Build(StringBuilder sb)
     {
         if (!_enabled.Value) return;
 
@@ -162,6 +181,13 @@ internal static class EventInfo
     /// <summary>Formats game time as hours and minutes; hours go past 24 (day end is 26:00).</summary>
     private static string Clock(TimeSpan t) => $"{(int)t.TotalHours:00}:{t.Minutes:00}";
 
+    /// <summary>Drops cached text and marks overlay dirty.</summary>
+    private static void Changed()
+    {
+        _text = null;
+        DebugOverlay.MarkDirty();
+    }
+
     /// <summary>Adds point to or removes it from in-range list after trigger enter or exit, from its range flag.</summary>
     private static void Track(MoveEventPoint e)
     {
@@ -179,7 +205,7 @@ internal static class EventInfo
             if (_inRange.Count == 0) _sources.Clear();
         }
 
-        DebugOverlay.MarkDirty();
+        Changed();
     }
 
     private static void Forget(MoveEventPoint e)
@@ -190,7 +216,7 @@ internal static class EventInfo
 
         _inRange.RemoveAt(index);
         if (_inRange.Count == 0) _sources.Clear();
-        DebugOverlay.MarkDirty();
+        Changed();
     }
 
     private static int IndexOf(MoveEventPoint e)
@@ -208,7 +234,7 @@ internal static class EventInfo
         GameManager game = GameMain.GameManager;
         GameClockManager clock = game != null ? game.gameClockManager : null;
         _checks[e] = (available, clock != null ? clock.Time : null);
-        if (IndexOf(e) >= 0) DebugOverlay.MarkDirty();
+        if (IndexOf(e) >= 0) Changed();
     }
 
     internal static class Hooks
@@ -267,6 +293,6 @@ internal static class EventInfo
         [HarmonyPatch(typeof(SimpleExplanationPop), nameof(SimpleExplanationPop.Open), typeof(Transform), typeof(Vector3), typeof(string))]
         [HarmonyPatch(typeof(EventStartImage), nameof(EventStartImage.RemoveCanStartEvent))]
         [HarmonyPatch(typeof(EventStartImage), nameof(EventStartImage.ClearCanStartEvents))]
-        private static void AfterPromptOrRowChange() => DebugOverlay.MarkDirty();
+        private static void AfterPromptOrRowChange() => Changed();
     }
 }

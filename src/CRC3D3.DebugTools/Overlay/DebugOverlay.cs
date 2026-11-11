@@ -55,7 +55,6 @@ internal static class DebugOverlay
     private static ConfigEntry<int> _fontSize;
     private static ConfigEntry<bool> _showWhenEmpty;
     private static string _title;
-    private static bool _on;
     private static bool _dirty;
     private static float _noticeUntil;
     private static bool _trackFollow;
@@ -70,6 +69,9 @@ internal static class DebugOverlay
     private static bool _belowFollow;
     private static Rect _lastFollow;
     private static int _stableSamples;
+
+    /// <summary>Gets a value indicating whether overlay is on (toggle key), shown or hidden while empty.</summary>
+    internal static bool IsOn { get; private set; }
 
     internal static void Bind(SettingList settings)
     {
@@ -135,7 +137,7 @@ internal static class DebugOverlay
     internal static void Tick()
     {
         if (KeyInput.IsDownEitherSide(_key.Value)) Toggle();
-        if (!_on) return;
+        if (!IsOn) return;
 
         if (_noticeUntil > 0f && Time.unscaledTime >= _noticeUntil)
         {
@@ -161,10 +163,11 @@ internal static class DebugOverlay
 
     private static void Toggle()
     {
-        _on = !_on;
-        Plugin.Log.LogInfo($"Debug overlay {(_on ? "on" : "off")}");
-        if (_on)
+        IsOn = !IsOn;
+        Plugin.Log.LogInfo($"Debug overlay {(IsOn ? "on" : "off")}");
+        if (IsOn)
         {
+            EventInfo.DropCache();
             _noticeUntil = Time.unscaledTime + EmptyNoticeSeconds;
             _dirty = true;
             return;
@@ -206,18 +209,23 @@ internal static class DebugOverlay
     /// <summary>Appends lines of each section whose feature is on; exception turns off that feature and drops its partial lines.</summary>
     private static void WriteSections(StringBuilder sb)
     {
-        if (!Plugin.Guard.IsOff(EventInfo.Feature))
+        WriteSection(sb, PlayerPosition.Feature, PlayerPosition.Write);
+        WriteSection(sb, EventInfo.Feature, EventInfo.Write);
+    }
+
+    private static void WriteSection(StringBuilder sb, string feature, Action<StringBuilder> write)
+    {
+        if (Plugin.Guard.IsOff(feature)) return;
+
+        int start = sb.Length;
+        try
         {
-            int start = sb.Length;
-            try
-            {
-                EventInfo.Write(sb);
-            }
-            catch (Exception e)
-            {
-                sb.Length = start;
-                Plugin.Guard.Fail(EventInfo.Feature, e);
-            }
+            write(sb);
+        }
+        catch (Exception e)
+        {
+            sb.Length = start;
+            Plugin.Guard.Fail(feature, e);
         }
     }
 

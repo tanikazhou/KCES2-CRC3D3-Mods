@@ -6,7 +6,7 @@ using KCES2.Fusebox;
 
 namespace CRC3D3.DebugTools;
 
-/// <summary>Debug tools for CRC3D3: on-screen debug overlay.</summary>
+/// <summary>Debug tools for CRC3D3: on-screen debug overlay with player position and field event points.</summary>
 /// <remarks>Plugin <c>Update</c> runs feature ticks; it needs <c>HideManagerGameObject = true</c> in <c>BepInEx.cfg</c>.</remarks>
 [BepInPlugin(Guid, "CRC3D3 Debug Tools", Version)]
 [BepInProcess("CRC 3D 3.exe")]
@@ -41,6 +41,12 @@ public class Plugin : BaseUnityPlugin
             _harmony.PatchAll(typeof(GameUiHooks));
             Guard.AddTick(DebugOverlay.Feature, DebugOverlay.Tick);
         }, [DebugOverlay.Hint]);
+
+        Guard.Start(PlayerPosition.Feature, () =>
+        {
+            PlayerPosition.Bind(settings);
+            Guard.AddTick(PlayerPosition.Feature, PlayerPosition.Tick);
+        }, [PlayerPosition.Hint]);
 
         Guard.Start(EventInfo.Feature, () =>
         {

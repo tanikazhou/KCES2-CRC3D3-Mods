@@ -33,6 +33,7 @@
   </Folder>
   <Folder Name="/tests/">
     <File Path="tests/Directory.Build.props" />
+    <Project Path="tests/CRC3D3.DebugTools.Tests/CRC3D3.DebugTools.Tests.csproj" />
     <Project Path="tests/CRC3D3.KCES2LoaderFix.Tests/CRC3D3.KCES2LoaderFix.Tests.csproj" />
     <Project Path="tests/CRC3D3.KeyHints.Tests/CRC3D3.KeyHints.Tests.csproj" />
     <Project Path="tests/KCES2.Fusebox.Tests/KCES2.Fusebox.Tests.csproj" />
