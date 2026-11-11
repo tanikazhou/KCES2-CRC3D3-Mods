@@ -73,7 +73,7 @@ internal static class StartupSkip
     private static void Fallback(SceneFirst scene, MethodBase setupCompleted, Exception e)
     {
         Plugin.Guard.Fail(Feature, e);
-        // ReSharper disable once Unity.PerformanceCriticalCodeNullComparison - One-time call (not on hot path)
+        // ReSharper disable once Unity.PerformanceCriticalCodeNullComparison - One-time call (not on hot path).
         if (scene == null) return;
 
         try

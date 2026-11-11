@@ -82,13 +82,13 @@ internal static class DebugOverlay
             "Keep the debug overlay visible when no feature has lines to show. "
             + "When off, the overlay hides then, and after the toggle key a short notice shows for a few seconds.");
         _title = $"Debug overlay ({_key.Value})";
-        _key.SettingChanged += (_, _) =>
+        _key.SettingChanged += static (_, _) =>
         {
             _title = $"Debug overlay ({_key.Value})";
             MarkDirty();
         };
-        _fontSize.SettingChanged += (_, _) => MarkDirty();
-        _showWhenEmpty.SettingChanged += (_, _) => MarkDirty();
+        _fontSize.SettingChanged += static (_, _) => MarkDirty();
+        _showWhenEmpty.SettingChanged += static (_, _) => MarkDirty();
     }
 
     /// <summary>Requests text rebuild at next frame while overlay is on.</summary>
@@ -174,6 +174,7 @@ internal static class DebugOverlay
         if (_canvas) SetVisible(false);
     }
 
+    // ReSharper disable Unity.PerformanceAnalysis - Runs only when _dirty is set: game hook, setting, toggle, notice end.
     private static void Refresh()
     {
         _dirty = false;
@@ -276,7 +277,6 @@ internal static class DebugOverlay
         Plugin.Log.LogInfo(below ? $"Debug overlay below follow character panel, top {top:0}" : "Debug overlay at top right");
     }
 
-    // ReSharper disable once Unity.PerformanceAnalysis - Runs only when overlay object is missing: first refresh, or after other code destroyed it
     private static void Build()
     {
         _root = new GameObject("DebugOverlay XUAIGNORE");

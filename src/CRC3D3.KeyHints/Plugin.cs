@@ -74,6 +74,7 @@ public class Plugin : BaseUnityPlugin
         Rebuild();
     }
 
+    // ReSharper disable Unity.PerformanceAnalysis - Runs only when _dirty is set: tag, setting, context or font change.
     private static void Rebuild()
     {
         if (!_show.Value)
