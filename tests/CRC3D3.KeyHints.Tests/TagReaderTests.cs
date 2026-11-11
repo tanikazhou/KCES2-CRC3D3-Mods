@@ -183,6 +183,53 @@ public class TagReaderTests : IDisposable
     }
 
     [Fact]
+    public void Read_FailedHidesRowWhateverActive()
+    {
+        var hint = new KeyHint();
+        Bind("A", "Key", KeyCode.A, hint);
+        Read();
+
+        hint.Failed = true;
+        hint.Active = true;
+
+        _found.Single().Read().Active.Should().BeFalse("plugin code that sets Active must not bring back row of failed feature");
+    }
+
+    [Fact]
+    public void Read_ForeignTagWithoutFailedField_StaysActive()
+    {
+        Bind("A", "Key", KeyCode.A, new OtherHint());
+
+        Read();
+
+        _found.Single().Read().Active.Should().BeTrue("missing Failed field reads as not failed");
+    }
+
+    [Fact]
+    public void Read_BoolSwitchFollowsSettingValue()
+    {
+        ConfigEntry<bool> doorHints = Bind("Hints", "DoorHints", true, new KeyHint { Key = new KeyboardShortcut(KeyCode.E) });
+        Read();
+        _found.Single().Read().Active.Should().BeTrue();
+
+        doorHints.Value = false;
+        _found.Single().Read().Active.Should().BeFalse("false bool switch hides row");
+
+        doorHints.Value = true;
+        _found.Single().Read().Active.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Read_NonBoolSettingWithFixedKey_IgnoresValue()
+    {
+        Bind("Hints", "Mode", 0, new KeyHint { Key = new KeyboardShortcut(KeyCode.E) });
+
+        Read();
+
+        _found.Single().Read().Active.Should().BeTrue("only bool settings are switches");
+    }
+
+    [Fact]
     public void Read_EntryWithoutTags_Ignored()
     {
         _config.Bind("A", "Key", KeyCode.A, "No tags.");

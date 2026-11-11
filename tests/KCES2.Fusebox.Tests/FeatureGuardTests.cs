@@ -219,28 +219,57 @@ public class FeatureGuardTests : IDisposable
     }
 
     [Fact]
-    public void Start_Throws_HintsInactiveAndChangedOnce()
+    public void Start_Throws_HintsFailedAndChangedOnce()
     {
         int calls = 0;
         var hint = new KeyHint { Changed = () => calls++ };
 
         _guard.Start("A", static () => throw new InvalidOperationException("boom"), [hint]);
 
-        hint.Active.Should().BeFalse();
+        hint.Failed.Should().BeTrue();
+        hint.Active.Should().BeTrue("plugin owns Active; guard writes only Failed");
         calls.Should().Be(1);
     }
 
     [Fact]
-    public void Fail_AfterStart_HintsInactiveAndChangedOnce()
+    public void Start_RepeatedFeature_KeepsEarlierHints()
+    {
+        var first = new KeyHint();
+        var second = new KeyHint();
+        _guard.Start("A", static () => { }, [first]);
+        _guard.Start("A", static () => { }, [second]);
+
+        _guard.Fail("A", new Exception());
+
+        first.Failed.Should().BeTrue("hints of repeated feature name add to stored ones");
+        second.Failed.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Start_FeatureAlreadyOff_HidesHintsAtOnce()
+    {
+        int calls = 0;
+        _guard.Start("A", static () => throw new InvalidOperationException("boom"));
+        var hint = new KeyHint { Changed = () => calls++ };
+
+        _guard.Start("A", static () => { }, [hint]);
+
+        hint.Failed.Should().BeTrue();
+        calls.Should().Be(1);
+    }
+
+    [Fact]
+    public void Fail_AfterStart_HintsFailedAndChangedOnce()
     {
         int calls = 0;
         var hint = new KeyHint { Changed = () => calls++ };
         _guard.Start("A", static () => { }, [hint]).Should().BeTrue();
-        hint.Active.Should().BeTrue();
+        hint.Failed.Should().BeFalse();
 
         _guard.Fail("A", new Exception());
 
-        hint.Active.Should().BeFalse();
+        hint.Failed.Should().BeTrue();
+        hint.Active.Should().BeTrue();
         calls.Should().Be(1);
     }
 
@@ -258,7 +287,7 @@ public class FeatureGuardTests : IDisposable
     }
 
     [Fact]
-    public void Disable_OtherFeature_LeavesHintActive()
+    public void Disable_OtherFeature_LeavesHintUnfailed()
     {
         int calls = 0;
         var hint = new KeyHint { Changed = () => calls++ };
@@ -266,7 +295,7 @@ public class FeatureGuardTests : IDisposable
 
         _guard.Fail("B", new Exception());
 
-        hint.Active.Should().BeTrue();
+        hint.Failed.Should().BeFalse();
         calls.Should().Be(0);
     }
 
@@ -280,21 +309,21 @@ public class FeatureGuardTests : IDisposable
 
         _guard.Fail("A", new Exception());
 
-        bad.Active.Should().BeFalse();
-        good.Active.Should().BeFalse();
+        bad.Failed.Should().BeTrue();
+        good.Failed.Should().BeTrue();
         calls.Should().Be(1);
         _log.Of(LogLevel.Warning).Should().ContainSingle().Which.Should().Contain("handler");
     }
 
     [Fact]
-    public void Disable_HintWithoutHandler_OnlyInactive()
+    public void Disable_HintWithoutHandler_OnlyFailed()
     {
         var hint = new KeyHint();
         _guard.Start("A", static () => { }, [hint]);
 
         FluentActions.Invoking(() => _guard.Fail("A", new Exception())).Should().NotThrow();
 
-        hint.Active.Should().BeFalse();
+        hint.Failed.Should().BeTrue();
     }
 
     [Fact]

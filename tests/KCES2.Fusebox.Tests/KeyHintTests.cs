@@ -16,6 +16,7 @@ public class KeyHintTests
         ["Order"] = typeof(int),
         ["Context"] = typeof(string),
         ["Active"] = typeof(bool),
+        ["Failed"] = typeof(bool),
         ["Key"] = typeof(KeyboardShortcut?),
         ["Changed"] = typeof(Action),
     };
@@ -36,6 +37,7 @@ public class KeyHintTests
         var hint = new KeyHint();
 
         hint.Active.Should().BeTrue();
+        hint.Failed.Should().BeFalse();
         hint.Key.Should().BeNull();
         hint.Changed.Should().BeNull();
         hint.Order.Should().Be(0);

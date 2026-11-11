@@ -65,15 +65,23 @@ internal sealed class FeatureGuard
     /// <param name="feature">Feature name.</param>
     /// <param name="start">Start steps.</param>
     /// <param name="hints">Key hints of feature, or <see langword="null"/>.
-    /// When feature turns off, guard sets <see cref="KeyHint.Active"/> to <see langword="false"/> and calls <see cref="KeyHint.Changed"/>.</param>
+    /// When feature turns off, guard sets <see cref="KeyHint.Failed"/> and calls <see cref="KeyHint.Changed"/>.</param>
     /// <returns><see langword="true"/> if start steps ran without exception; otherwise, <see langword="false"/> (feature is then off).</returns>
+    /// <remarks>Hints of repeated feature name add to stored ones. If feature is off already, its hints hide at once.</remarks>
     public bool Start(string feature, Action start, KeyHint[]? hints = null)
     {
         if (hints is { Length: > 0 })
         {
+            bool off;
             lock (_off)
             {
-                _hints[feature] = hints;
+                _hints[feature] = _hints.TryGetValue(feature, out KeyHint[]? stored) ? [.. stored, .. hints] : hints;
+                off = _off.Contains(feature);
+            }
+
+            if (off)
+            {
+                HideHints(feature, hints);
             }
         }
 
@@ -169,16 +177,16 @@ internal sealed class FeatureGuard
 
     /// <summary>Hides key hint rows of stopped feature.</summary>
     /// <remarks>Runs outside lock: <see cref="KeyHint.Changed"/> is code of key hints plugin.</remarks>
-    private void HideHints(string feature, KeyHint[] hints)
+    private void HideHints(string feature, KeyHint?[] hints)
     {
-        foreach (KeyHint hint in hints)
+        foreach (KeyHint? hint in hints)
         {
             if (hint == null)
             {
                 continue;
             }
 
-            hint.Active = false;
+            hint.Failed = true;
             try
             {
                 hint.Changed?.Invoke();

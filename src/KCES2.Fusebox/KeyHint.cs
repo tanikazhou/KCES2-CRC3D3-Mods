@@ -15,7 +15,9 @@ namespace KCES2.Fusebox;
 /// <para>No reference to key hints plugin: without it installed, tag has no effect and plugin runs normally.
 /// Class stays internal, one copy per plugin, so plugins do not conflict.</para>
 /// <para>Plugin writes <see cref="Label"/> and <see cref="Active"/> on main thread, then calls <see cref="Changed"/>.
-/// Keep tag object in field to change it later.</para>
+/// Keep tag object in field to change it later. Only <see cref="FeatureGuard"/> writes <see cref="Failed"/>.</para>
+/// <para>On <see langword="bool"/> setting with fixed <see cref="Key"/>, setting value is feature switch: <see langword="false"/> hides row.</para>
+/// <para>Keep tag field out of class with static fields of game types: <see cref="FeatureGuard"/> rule for Awake bodies applies to that class.</para>
 /// </remarks>
 /// <example>
 /// <code>
@@ -38,10 +40,15 @@ internal sealed class KeyHint
     public string? Context;
 
     /// <summary>Indicates whether plugin state allows row now.</summary>
+    /// <remarks>Plugin writes it; <see cref="Failed"/> hides row whatever this holds.</remarks>
     public bool Active = true;
 
+    /// <summary>Indicates whether feature of row failed and is off for session.</summary>
+    /// <remarks>Written only by <see cref="FeatureGuard"/>, possibly on loader thread.</remarks>
+    public bool Failed;
+
     /// <summary>Fixed key for setting that is no key, e.g. game key E on feature switch.</summary>
-    /// <remarks><see langword="null"/> = key from setting value.</remarks>
+    /// <remarks><see langword="null"/> = key from setting value. On <see langword="bool"/> setting, value <see langword="false"/> hides row.</remarks>
     public KeyboardShortcut? Key;
 
     /// <summary>Change signal, filled by key hints plugin; <see langword="null"/> while none runs.</summary>

@@ -19,6 +19,7 @@ internal sealed class TagFields
         Order = Field(type, "Order");
         Context = Field(type, "Context");
         Active = Field(type, "Active");
+        Failed = Field(type, "Failed");
         Key = Field(type, "Key");
         Changed = Field(type, "Changed");
     }
@@ -34,6 +35,9 @@ internal sealed class TagFields
 
     /// <summary>Gets plugin state field, or <see langword="null"/>.</summary>
     public FieldInfo Active { get; }
+
+    /// <summary>Gets failed feature field, or <see langword="null"/>.</summary>
+    public FieldInfo Failed { get; }
 
     /// <summary>Gets fixed key field, or <see langword="null"/>.</summary>
     public FieldInfo Key { get; }
@@ -61,7 +65,8 @@ internal sealed class TagFields
 
         error = WrongType(tagType, "Label", typeof(string)) ?? WrongType(tagType, "Order", typeof(int))
             ?? WrongType(tagType, "Context", typeof(string)) ?? WrongType(tagType, "Active", typeof(bool))
-            ?? WrongType(tagType, "Key", typeof(KeyboardShortcut?)) ?? WrongType(tagType, "Changed", typeof(Action));
+            ?? WrongType(tagType, "Failed", typeof(bool)) ?? WrongType(tagType, "Key", typeof(KeyboardShortcut?))
+            ?? WrongType(tagType, "Changed", typeof(Action));
         if (error != null)
         {
             _errors[tagType] = error;

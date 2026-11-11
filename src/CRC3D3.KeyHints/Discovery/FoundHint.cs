@@ -45,12 +45,19 @@ internal sealed class FoundHint
 
     /// <summary>Reads current label, order, state and key.</summary>
     /// <returns>Values of this read.</returns>
-    /// <remarks>Reflection with boxing: call only while rows rebuild, never per frame.</remarks>
+    /// <remarks>
+    /// <para>Reflection with boxing: call only while rows rebuild, never per frame.</para>
+    /// <para>Row is active when <c>Active</c> is set, <c>Failed</c> is not, and setting is no <see langword="bool"/> switch set to
+    /// <see langword="false"/>. Missing field = default.</para>
+    /// </remarks>
     public HintState Read()
     {
         string label = _fields.Label?.GetValue(Tag) as string;
         int order = _fields.Order == null ? 0 : (int)_fields.Order.GetValue(Tag);
         bool active = _fields.Active == null || (bool)_fields.Active.GetValue(Tag);
+        bool failed = _fields.Failed != null && (bool)_fields.Failed.GetValue(Tag);
+        bool switchOff = Entry.BoxedValue is false;
+        active = active && !failed && !switchOff;
         return new HintState(string.IsNullOrEmpty(label) ? _fallbackLabel : label, order, active, Key());
     }
 
