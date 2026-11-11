@@ -39,13 +39,35 @@ internal static class ContextHooks
 
     [HarmonyPostfix]
     [HarmonyPatch(typeof(DanceMain), "OnSceneLoadCompleted")]
-    private static void AfterDanceLoaded(DanceMain __instance) =>
-        Plugin.Guard.Run(Feature, () => Apply(DanceContext.Name, DanceContext.Loaded(__instance)));
+    private static void AfterDanceLoaded(DanceMain __instance)
+    {
+        if (Plugin.Guard.IsOff(Feature)) return;
+
+        try
+        {
+            Apply(DanceContext.Name, DanceContext.Loaded(__instance));
+        }
+        catch (Exception e)
+        {
+            Plugin.Guard.Fail(Feature, e);
+        }
+    }
 
     [HarmonyPostfix]
     [HarmonyPatch(typeof(DanceMain), "OnDestroy")]
-    private static void AfterDanceDestroyed(DanceMain __instance) =>
-        Plugin.Guard.Run(Feature, () => Apply(DanceContext.Name, DanceContext.Destroyed(__instance)));
+    private static void AfterDanceDestroyed(DanceMain __instance)
+    {
+        if (Plugin.Guard.IsOff(Feature)) return;
+
+        try
+        {
+            Apply(DanceContext.Name, DanceContext.Destroyed(__instance));
+        }
+        catch (Exception e)
+        {
+            Plugin.Guard.Fail(Feature, e);
+        }
+    }
 
     private static void Apply(string name, bool on)
     {
