@@ -40,7 +40,7 @@ public class Plugin : BaseUnityPlugin
             DebugOverlay.Bind(settings);
             _harmony.PatchAll(typeof(GameUiHooks));
             Guard.AddTick(DebugOverlay.Feature, DebugOverlay.Tick);
-        });
+        }, [DebugOverlay.Hint]);
 
         Guard.Start(EventInfo.Feature, () =>
         {

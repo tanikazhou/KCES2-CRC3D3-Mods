@@ -35,6 +35,9 @@ internal static class DebugOverlay
 {
     internal const string Feature = "DebugOverlay";
 
+    /// <summary>Key hint row for toggle key, shown in town while CRC3D3.KeyHints runs.</summary>
+    internal static readonly KeyHint Hint = new() { Context = "Field", Order = 300, Label = "Debug overlay" };
+
     private const string FontName = "ja_BIZUDGothic-Regular SDF";
     private const string EmptyLine = "Nothing to show";
     private const string NoticeLine = "On. Nothing to show, hides in a few seconds";
@@ -71,7 +74,7 @@ internal static class DebugOverlay
     internal static void Bind(SettingList settings)
     {
         _key = settings.Bind("Overlay", "ToggleKey", new KeyboardShortcut(KeyCode.F3),
-            "Key that shows or hides the debug overlay at the top right of the screen.");
+            "Key that shows or hides the debug overlay at the top right of the screen.", hint: Hint);
         _fontSize = settings.Bind("Overlay", "FontSize", 18,
             "Text size of the debug overlay, in points at 1080 lines screen height.",
             new AcceptableValueRange<int>(10, 40));
