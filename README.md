@@ -2,6 +2,15 @@
 
 BepInEx 5 plugins for KCES2 and CRC3D3.
 
+## Supported games
+
+- CRC3D3 second trial (try2), with its 2026.10.22 update.
+- KCES2 trial that comes with the CRC3D3 second trial (folder `kces2_try`).
+
+The plugins likely work on, but do not support the third trial (try3) or the retail release yet.
+
+At time of writing, CRC3D3.KCES2LoaderFix also works on COM3D2.5 (which loads KCES1) because of how trivial it is.
+
 ## Plugins for KCES2 and CRC3D3
 
 | Plugin          | Effect                                               |
