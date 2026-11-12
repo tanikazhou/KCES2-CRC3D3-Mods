@@ -1,9 +1,8 @@
 using System.Collections;
-using System.Collections.Specialized;
 
 namespace CRC3D3.KCES2LoaderFix;
 
-/// <summary>Finds and removes Doorstop environment variables (<c>DOORSTOP_*</c>).</summary>
+/// <summary>Finds Doorstop environment variables (<c>DOORSTOP_*</c>).</summary>
 /// <remarks>
 /// Names compare without case, as Windows environment variables do.
 /// Pure code without CRC3D3 types: unit tests link this file.
@@ -23,19 +22,5 @@ internal static class DoorstopEnv
         }
 
         return found;
-    }
-
-    /// <summary>Removes every Doorstop variable from child process environment.</summary>
-    /// <returns>Names of removed variables, for log.</returns>
-    internal static List<string> RemoveFrom(StringDictionary env)
-    {
-        var remove = new List<string>();
-        foreach (string key in env.Keys)
-        {
-            if (key.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase)) remove.Add(key);
-        }
-
-        foreach (string key in remove) env.Remove(key);
-        return remove;
     }
 }
