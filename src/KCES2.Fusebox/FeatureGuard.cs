@@ -19,11 +19,14 @@ namespace KCES2.Fusebox;
 /// <example>
 /// Usage (Plugin.Awake):
 /// <code>
-/// guard = new FeatureGuard(Log);
-/// guard.Start("SearchKeys", () =&gt; { SearchKeys.Init(Config); harmony.PatchAll(typeof(SearchKeys.Hooks));
-///     guard.AddTick("SearchKeys", SearchKeys.Tick); });
+/// Guard = new FeatureGuard(Log);
+/// Guard.Start(PlayerPosition.Feature, () =&gt;
+/// {
+///     PlayerPosition.Bind(settings);
+///     Guard.AddTick(PlayerPosition.Feature, PlayerPosition.Tick);
+/// }, [PlayerPosition.Hint]);
 /// </code>
-/// Plugin Update: <c>guard.TickAll()</c>; scene ready (<see cref="SceneReadyDelay"/>): <c>guard.SceneReadyAll()</c>.
+/// Plugin Update: <c>Guard.TickAll()</c>.
 /// </example>
 internal sealed class FeatureGuard
 {
@@ -31,7 +34,6 @@ internal sealed class FeatureGuard
 
     private readonly HashSet<string> _off = new(StringComparer.Ordinal);
     private readonly List<Entry> _ticks = [];
-    private readonly List<Entry> _sceneReady = [];
 
     /// <remarks>Key hints per feature, hidden when feature turns off; guarded by same lock as stopped features.</remarks>
     private readonly Dictionary<string, KeyHint[]> _hints = new(StringComparer.Ordinal);
@@ -101,14 +103,8 @@ internal sealed class FeatureGuard
     /// <remarks>Delegate made once; <see cref="TickAll"/> walks list by index, so no allocation per frame. Call added during tick runs in same pass.</remarks>
     public void AddTick(string feature, Action tick) => _ticks.Add(new Entry(feature, tick));
 
-    /// <summary>Registers call that <see cref="SceneReadyAll"/> runs at every scene ready. Main thread only.</summary>
-    public void AddSceneReady(string feature, Action ready) => _sceneReady.Add(new Entry(feature, ready));
-
     /// <summary>Runs per-frame calls of features not off, in registration order. Main thread only.</summary>
     public void TickAll() => RunAll(_ticks, "tick");
-
-    /// <summary>Runs scene-ready calls of features not off, in registration order. Main thread only.</summary>
-    public void SceneReadyAll() => RunAll(_sceneReady, "scene ready");
 
     /// <summary>Guards one call.</summary>
     /// <remarks>For work not registered, e.g. inside event.</remarks>

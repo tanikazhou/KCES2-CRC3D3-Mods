@@ -91,22 +91,6 @@ public class FeatureGuardTests : IDisposable
     }
 
     [Fact]
-    public void SceneReadyAll_ErrorTurnsOffOnlyItsFeatureAndStopsItsTicks()
-    {
-        int ticks = 0, other = 0;
-        _guard.AddSceneReady("A", () => throw new Exception("ready"));
-        _guard.AddSceneReady("B", () => other++);
-        _guard.AddTick("A", () => ticks++);
-
-        _guard.SceneReadyAll();
-        _guard.TickAll();
-
-        ticks.Should().Be(0);
-        other.Should().Be(1);
-        _log.Of(LogLevel.Error).Should().ContainSingle().Which.Should().StartWith("A off (scene ready): ");
-    }
-
-    [Fact]
     public void StartFailure_StopsLaterTicksAndRuns()
     {
         int ticks = 0, runs = 0;
@@ -178,7 +162,6 @@ public class FeatureGuardTests : IDisposable
     public void TickAll_NoEntries_DoesNothing()
     {
         _guard.TickAll();
-        _guard.SceneReadyAll();
         _log.Lines.Should().BeEmpty();
     }
 
